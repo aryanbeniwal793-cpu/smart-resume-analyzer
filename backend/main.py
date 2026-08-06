@@ -33,3 +33,32 @@ async def upload_resume(file: UploadFile = File(...)):
     "text": text,
     "parsed": parsed_data
 }
+@app.post("/analyze-jd")
+async def analyze_jd(data: dict):
+    text = data["job_description"]
+
+    skills_db = [
+        "Python",
+        "Java",
+        "C",
+        "C++",
+        "SQL",
+        "React",
+        "Node",
+        "JavaScript",
+        "Machine Learning",
+        "HTML",
+        "CSS",
+        "Git",
+        "FastAPI"
+    ]
+
+    found = []
+
+    for skill in skills_db:
+        if skill.lower() in text.lower():
+            found.append(skill)
+
+    return {
+        "jd_skills": found
+    }

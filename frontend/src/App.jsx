@@ -6,6 +6,9 @@ function App() {
   const [text, setText] = useState("");
   const [parsed, setParsed] = useState(null);
 
+  const [jobDescription, setJobDescription] = useState("");
+  const [jdSkills, setJdSkills] = useState([]);
+
   const uploadResume = async () => {
     if (!file) {
       alert("Please select a PDF first!");
@@ -30,6 +33,23 @@ function App() {
     }
   };
 
+
+  const analyzeJD = async () => {
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/analyze-jd",
+        {
+          job_description: jobDescription,
+        }
+      );
+
+      setJdSkills(response.data.jd_skills);
+    } catch (err) {
+      console.error(err);
+      alert("JD analysis failed!");
+    }
+  };
+
   return (
     <div style={{ padding: 30 }}>
       <h1>Smart Resume Analyzer</h1>
@@ -40,7 +60,8 @@ function App() {
         onChange={(e) => setFile(e.target.files[0])}
       />
 
-      <br /><br />
+      <br />
+      <br />
 
       <button onClick={uploadResume}>
         Upload Resume
@@ -65,6 +86,33 @@ function App() {
           </ul>
         </div>
       )}
+
+      <hr />
+
+      <h2>Paste Job Description</h2>
+
+      <textarea
+        rows="10"
+        cols="60"
+        placeholder="Paste Job Description here..."
+        value={jobDescription}
+        onChange={(e) => setJobDescription(e.target.value)}
+      />
+
+      <br />
+      <br />
+
+      <button onClick={analyzeJD}>
+        Analyze JD
+      </button>
+
+      <h3>Required Skills</h3>
+
+      <ul>
+        {jdSkills.map((skill, index) => (
+          <li key={index}>{skill}</li>
+        ))}
+      </ul>
 
       <hr />
 
