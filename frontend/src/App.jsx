@@ -9,6 +9,8 @@ function App() {
   const [jobDescription, setJobDescription] = useState("");
   const [jdSkills, setJdSkills] = useState([]);
 
+  const [ats, setATS] = useState(null);
+
   const uploadResume = async () => {
     if (!file) {
       alert("Please select a PDF first!");
@@ -33,17 +35,25 @@ function App() {
     }
   };
 
-
   const analyzeJD = async () => {
+    if (!file) {
+      alert("Please upload/select a resume first!");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("job_description", jobDescription);
+
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/analyze-jd",
-        {
-          job_description: jobDescription,
-        }
+        formData
       );
 
       setJdSkills(response.data.jd_skills);
+      setATS(response.data.ats);
+
     } catch (err) {
       console.error(err);
       alert("JD analysis failed!");
@@ -60,8 +70,7 @@ function App() {
         onChange={(e) => setFile(e.target.files[0])}
       />
 
-      <br />
-      <br />
+      <br /><br />
 
       <button onClick={uploadResume}>
         Upload Resume
@@ -99,20 +108,47 @@ function App() {
         onChange={(e) => setJobDescription(e.target.value)}
       />
 
-      <br />
-      <br />
+      <br /><br />
 
       <button onClick={analyzeJD}>
         Analyze JD
       </button>
 
-      <h3>Required Skills</h3>
+      <hr />
+
+      <h2>Required Skills</h2>
 
       <ul>
         {jdSkills.map((skill, index) => (
           <li key={index}>{skill}</li>
         ))}
       </ul>
+
+      {ats && (
+        <>
+          <hr />
+
+          <h2>ATS Score</h2>
+
+          <h1>{ats.score}%</h1>
+
+          <h3>Matched Skills</h3>
+
+          <ul>
+            {ats.matched.map((skill, index) => (
+              <li key={index}>{skill}</li>
+            ))}
+          </ul>
+
+          <h3>Missing Skills</h3>
+
+          <ul>
+            {ats.missing.map((skill, index) => (
+              <li key={index}>{skill}</li>
+            ))}
+          </ul>
+        </>
+      )}
 
       <hr />
 
