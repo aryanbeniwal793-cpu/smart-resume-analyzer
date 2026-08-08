@@ -61,8 +61,8 @@ function App() {
   };
 
   return (
-    <div style={{ padding: 30 }}>
-      <h1>Smart Resume Analyzer</h1>
+    <div className="analyzer-container">
+      <h1 className="analyzer-title">Smart Resume Analyzer</h1>
 
       <input
         type="file"
@@ -125,30 +125,40 @@ function App() {
       </ul>
 
       {ats && (
-        <>
-          <hr />
+        <div className="section">
 
-          <h2>ATS Score</h2>
+        <h2>ATS Score</h2>
 
-          <h1>{ats.score}%</h1>
+        <div className="ats-score">
+        {ats.score}%
+        </div>
 
-          <h3>Matched Skills</h3>
+        <h3>Matched Skills</h3>
 
-          <ul>
-            {ats.matched.map((skill, index) => (
-              <li key={index}>{skill}</li>
-            ))}
-          </ul>
+        <ul className="skill-list matched">
+        {ats.matched.map((skill, index) => (
+        <li key={index}>✓ {skill}</li>
+      ))}
+    </ul>
 
-          <h3>Missing Skills</h3>
+    <h3>Missing Skills</h3>
 
-          <ul>
-            {ats.missing.map((skill, index) => (
-              <li key={index}>{skill}</li>
-            ))}
-          </ul>
-        </>
-      )}
+    <ul className="skill-list missing">
+      {ats.missing.map((skill, index) => (
+        <li key={index}>✗ {skill}</li>
+      ))}
+    </ul>
+
+    <h3>Resume Suggestions</h3>
+
+    <ul className="suggestions">
+      {ats.suggestions.map((suggestion, index) => (
+        <li key={index}>→ {suggestion}</li>
+      ))}
+    </ul>
+
+  </div>
+)}
 
       <hr />
 
