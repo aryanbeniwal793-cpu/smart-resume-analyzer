@@ -23,9 +23,13 @@ def home():
 
 @app.post("/upload")
 async def upload_resume(file: UploadFile = File(...)):
-    pdf = fitz.open(stream=await file.read(), filetype="pdf")
+    pdf = fitz.open(
+        stream=await file.read(),
+        filetype="pdf"
+    )
 
     text = ""
+
     for page in pdf:
         text += page.get_text()
 
@@ -44,9 +48,13 @@ async def analyze_jd(
     job_description: str = Form(...)
 ):
     # Read Resume
-    pdf = fitz.open(stream=await file.read(), filetype="pdf")
+    pdf = fitz.open(
+        stream=await file.read(),
+        filetype="pdf"
+    )
 
     resume_text = ""
+
     for page in pdf:
         resume_text += page.get_text()
 
@@ -66,16 +74,23 @@ async def analyze_jd(
         "HTML",
         "CSS",
         "Git",
-        "FastAPI"
+        "FastAPI",
+        "Docker",
+        "AWS",
+        "MongoDB"
     ]
 
     # Extract JD Skills
+    print("JD RECEIVED:", repr(job_description))
+
     jd_skills = []
 
-    jd_lines = [line.strip().lower() for line in job_description.splitlines()]
+    jd_text = job_description.lower()
 
     for skill in skills_db:
-        if skill.lower() in jd_lines:
+        pattern = r"(?<!\w)" + re.escape(skill.lower()) + r"(?!\w)"
+
+        if re.search(pattern, jd_text):
             jd_skills.append(skill)
 
     # Calculate ATS Score

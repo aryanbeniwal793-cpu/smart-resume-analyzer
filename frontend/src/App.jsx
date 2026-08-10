@@ -133,7 +133,8 @@ function App() {
         {ats.score}%
         </div>
 
-        <h3>Matched Skills</h3>
+        <h3>Match Rating</h3>
+        <p>{ats.rating}</p>
 
         <ul className="skill-list matched">
         {ats.matched.map((skill, index) => (
