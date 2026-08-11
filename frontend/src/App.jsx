@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import "./App.css";
 
 function App() {
   const [file, setFile] = useState(null);
@@ -28,7 +29,6 @@ function App() {
 
       setText(res.data.text);
       setParsed(res.data.parsed);
-
     } catch (err) {
       console.error(err);
       alert("Upload failed!");
@@ -38,6 +38,11 @@ function App() {
   const analyzeJD = async () => {
     if (!file) {
       alert("Please upload/select a resume first!");
+      return;
+    }
+
+    if (!jobDescription.trim()) {
+      alert("Please enter a job description!");
       return;
     }
 
@@ -53,7 +58,6 @@ function App() {
 
       setJdSkills(response.data.jd_skills);
       setATS(response.data.ats);
-
     } catch (err) {
       console.error(err);
       alert("JD analysis failed!");
@@ -61,111 +65,224 @@ function App() {
   };
 
   return (
-    <div className="analyzer-container">
-      <h1 className="analyzer-title">Smart Resume Analyzer</h1>
+    <div className="app">
 
-      <input
-        type="file"
-        accept=".pdf"
-        onChange={(e) => setFile(e.target.files[0])}
-      />
+      {/* Header */}
+      <header className="header">
+        <h1>Smart Resume Analyzer</h1>
+        <p>Analyze your resume against a job description</p>
+      </header>
 
-      <br /><br />
+      {/* Resume Upload */}
+      <section className="card">
+        <h2>📄 Upload Resume</h2>
 
-      <button onClick={uploadResume}>
-        Upload Resume
-      </button>
+        <input
+          type="file"
+          accept=".pdf"
+          onChange={(e) => setFile(e.target.files[0])}
+        />
 
-      <hr />
+        {file && (
+          <p className="file-name">
+            Selected: {file.name}
+          </p>
+        )}
 
-      <h2>Parsed Resume</h2>
+        <button onClick={uploadResume}>
+          Upload Resume
+        </button>
+      </section>
 
+      {/* Parsed Resume */}
       {parsed && (
-        <div>
-          <p><strong>Name:</strong> {parsed.name}</p>
-          <p><strong>Email:</strong> {parsed.email}</p>
-          <p><strong>Phone:</strong> {parsed.phone}</p>
+        <section className="card">
+          <h2>👤 Parsed Resume</h2>
 
-          <p><strong>Skills:</strong></p>
+          <div className="resume-info">
+            <p>
+              <strong>Name:</strong> {parsed.name}
+            </p>
 
-          <ul>
+            <p>
+              <strong>Email:</strong> {parsed.email}
+            </p>
+
+            <p>
+              <strong>Phone:</strong> {parsed.phone}
+            </p>
+          </div>
+
+          <h3>Skills</h3>
+
+          <div className="skill-container">
             {parsed.skills.map((skill, index) => (
-              <li key={index}>{skill}</li>
+              <span className="skill-tag" key={index}>
+                {skill}
+              </span>
             ))}
-          </ul>
-        </div>
+          </div>
+        </section>
       )}
 
-      <hr />
+      {/* Job Description */}
+      <section className="card">
+        <h2>💼 Job Description</h2>
 
-      <h2>Paste Job Description</h2>
+        <textarea
+          rows="10"
+          placeholder="Paste the job description here..."
+          value={jobDescription}
+          onChange={(e) => setJobDescription(e.target.value)}
+        />
 
-      <textarea
-        rows="10"
-        cols="60"
-        placeholder="Paste Job Description here..."
-        value={jobDescription}
-        onChange={(e) => setJobDescription(e.target.value)}
-      />
+        <button onClick={analyzeJD}>
+          Analyze Job Description
+        </button>
+      </section>
 
-      <br /><br />
+      {/* Required Skills */}
+      {jdSkills.length > 0 && (
+        <section className="card">
+          <h2>🎯 Required Skills</h2>
 
-      <button onClick={analyzeJD}>
-        Analyze JD
-      </button>
+          <div className="skill-container">
+            {jdSkills.map((skill, index) => (
+              <span className="skill-tag required" key={index}>
+                {skill}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
-      <hr />
-
-      <h2>Required Skills</h2>
-
-      <ul>
-        {jdSkills.map((skill, index) => (
-          <li key={index}>{skill}</li>
-        ))}
-      </ul>
-
+      {/* ATS Results */}
       {ats && (
-        <div className="section">
+        <section className="results">
 
-        <h2>ATS Score</h2>
+          <h2 className="results-title">
+            ATS Analysis Results
+          </h2>
 
-        <div className="ats-score">
-        {ats.score}%
-        </div>
+          {/* Score */}
+          <div className="score-card">
 
-        <h3>Match Rating</h3>
-        <p>{ats.rating}</p>
+            <div className="score-circle">
+              <span>{ats.score}%</span>
+            </div>
 
-        <ul className="skill-list matched">
-        {ats.matched.map((skill, index) => (
-        <li key={index}>✓ {skill}</li>
-      ))}
-    </ul>
+            <div>
+              <h3>ATS Match Score</h3>
+              <p className="rating">
+                {ats.rating}
+              </p>
+            </div>
 
-    <h3>Missing Skills</h3>
+          </div>
 
-    <ul className="skill-list missing">
-      {ats.missing.map((skill, index) => (
-        <li key={index}>✗ {skill}</li>
-      ))}
-    </ul>
+          {/* Statistics */}
+          <div className="stats">
 
-    <h3>Resume Suggestions</h3>
+            <div className="stat-card">
+              <h3>{ats.matched.length}</h3>
+              <p>Matched Skills</p>
+            </div>
 
-    <ul className="suggestions">
-      {ats.suggestions.map((suggestion, index) => (
-        <li key={index}>→ {suggestion}</li>
-      ))}
-    </ul>
+            <div className="stat-card">
+              <h3>{ats.missing.length}</h3>
+              <p>Missing Skills</p>
+            </div>
 
-  </div>
-)}
+            <div className="stat-card">
+              <h3>{jdSkills.length}</h3>
+              <p>Required Skills</p>
+            </div>
 
-      <hr />
+          </div>
 
-      <h2>Extracted Text</h2>
+          {/* Matched and Missing */}
+          <div className="skill-sections">
 
-      <pre>{text}</pre>
+            <div className="result-card matched-card">
+              <h3>✓ Matched Skills</h3>
+
+              {ats.matched.length > 0 ? (
+                <ul>
+                  {ats.matched.map((skill, index) => (
+                    <li key={index}>
+                      ✓ {skill}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No matching skills found.</p>
+              )}
+            </div>
+
+            <div className="result-card missing-card">
+              <h3>✗ Missing Skills</h3>
+
+              {ats.missing.length > 0 ? (
+                <ul>
+                  {ats.missing.map((skill, index) => (
+                    <li key={index}>
+                      ✗ {skill}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No missing skills!</p>
+              )}
+            </div>
+
+          </div>
+
+          {/* Suggestions */}
+          <div className="result-card suggestions-card">
+
+            <h3>💡 Resume Improvement Suggestions</h3>
+
+            {ats.suggestions.length > 0 ? (
+              <ul>
+                {ats.suggestions.map((suggestion, index) => (
+                  <li key={index}>
+                    → {suggestion}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>
+                Great! No additional suggestions at this time.
+              </p>
+            )}
+
+          </div>
+
+        </section>
+      )}
+
+      {/* Extracted Text */}
+      {text && (
+        <section className="card">
+
+          <details>
+            <summary>
+              📃 View Extracted Resume Text
+            </summary>
+
+            <pre className="extracted-text">
+              {text}
+            </pre>
+
+          </details>
+
+        </section>
+      )}
+
+      <footer>
+        <p>Smart Resume Analyzer • React + FastAPI</p>
+      </footer>
+
     </div>
   );
 }
