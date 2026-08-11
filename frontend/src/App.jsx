@@ -1,290 +1,340 @@
 import { useState } from "react";
-import axios from "axios";
+import {
+    uploadResume as uploadResumeAPI,
+    analyzeJobDescription,
+} from "./api";
 import "./App.css";
 
 function App() {
-  const [file, setFile] = useState(null);
-  const [text, setText] = useState("");
-  const [parsed, setParsed] = useState(null);
+    const [file, setFile] = useState(null);
+    const [text, setText] = useState("");
+    const [parsed, setParsed] = useState(null);
 
-  const [jobDescription, setJobDescription] = useState("");
-  const [jdSkills, setJdSkills] = useState([]);
+    const [jobDescription, setJobDescription] = useState("");
+    const [jdSkills, setJdSkills] = useState([]);
 
-  const [ats, setATS] = useState(null);
+    const [ats, setATS] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [analyzing, setAnalyzing] = useState(false);
+    const [uploadError, setUploadError] = useState("");
+    const [analysisError, setAnalysisError] = useState("");
 
-  const uploadResume = async () => {
-    if (!file) {
-      alert("Please select a PDF first!");
-      return;
-    }
+    const uploadResume = async () => {
+        if (!file) {
+            alert("Please select a PDF first!");
+            return;
+        }
+        setUploading(true);
+        setUploadError("");
 
-    const formData = new FormData();
-    formData.append("file", file);
+        try {
+            const data = await uploadResumeAPI(file);
 
-    try {
-      const res = await axios.post(
-        "http://127.0.0.1:8000/upload",
-        formData
-      );
+            setText(data.text);
+            setParsed(data.parsed);
+        } catch (err) {
+            console.error(err);
+            setUploadError(err.message || "Resume upload failed!");
+        } finally {
+            setUploading(false);
+        } 
+    };
 
-      setText(res.data.text);
-      setParsed(res.data.parsed);
-    } catch (err) {
-      console.error(err);
-      alert("Upload failed!");
-    }
-  };
+    const analyzeJD = async () => {
+        if (!file) {
+            alert("Please upload/select a resume first!");
+            return;
+        }
 
-  const analyzeJD = async () => {
-    if (!file) {
-      alert("Please upload/select a resume first!");
-      return;
-    }
+        if (!jobDescription.trim()) {
+            alert("Please enter a job description!");
+            return;
+        }
+        setAnalyzing(true);
+        setAnalysisError("");
 
-    if (!jobDescription.trim()) {
-      alert("Please enter a job description!");
-      return;
-    }
+        try {
+            const data = await analyzeJobDescription(
+                file,
+                jobDescription
+            );
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("job_description", jobDescription);
+            setJdSkills(data.jd_skills);
+            setATS(data.ats);
+        } catch (err) {
+            console.error(err);
+            setAnalysisError(
+                err.message || "JD analysis failed!"
+            );
+        } finally {
+            setAnalyzing(false);
+        }
+    };
 
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/analyze-jd",
-        formData
-      );
+    return (
+        <div className="app">
 
-      setJdSkills(response.data.jd_skills);
-      setATS(response.data.ats);
-    } catch (err) {
-      console.error(err);
-      alert("JD analysis failed!");
-    }
-  };
+            {/* Header */}
+            <header className="header">
+                <h1>Smart Resume Analyzer</h1>
+                <p>
+                    Analyze your resume against a job description
+                </p>
+            </header>
 
-  return (
-    <div className="app">
+            {/* Resume Upload */}
+            <section className="card">
+                <h2>📄 Upload Resume</h2>
 
-      {/* Header */}
-      <header className="header">
-        <h1>Smart Resume Analyzer</h1>
-        <p>Analyze your resume against a job description</p>
-      </header>
+                <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) =>
+                        setFile(e.target.files[0])
+                    }
+                />
 
-      {/* Resume Upload */}
-      <section className="card">
-        <h2>📄 Upload Resume</h2>
+                {file && (
+                    <p className="file-name">
+                        Selected: {file.name}
+                    </p>
+                )}
 
-        <input
-          type="file"
-          accept=".pdf"
-          onChange={(e) => setFile(e.target.files[0])}
-        />
+                <button onClick={uploadResume} disabled={uploading}>
+                    {uploading ? "Uploading..." : "Upload Resume"}
+                </button>
 
-        {file && (
-          <p className="file-name">
-            Selected: {file.name}
-          </p>
-        )}
+                {uploadError && (
+                    <p className="error-message">
+                        {uploadError}
+                    </p>
+                )}
+            </section>
 
-        <button onClick={uploadResume}>
-          Upload Resume
-        </button>
-      </section>
+            {/* Parsed Resume */}
+            {parsed && (
+                <section className="card">
+                    <h2>👤 Parsed Resume</h2>
 
-      {/* Parsed Resume */}
-      {parsed && (
-        <section className="card">
-          <h2>👤 Parsed Resume</h2>
+                    <div className="resume-info">
+                        <p>
+                            <strong>Name:</strong>{" "}
+                            {parsed.name}
+                        </p>
 
-          <div className="resume-info">
-            <p>
-              <strong>Name:</strong> {parsed.name}
-            </p>
+                        <p>
+                            <strong>Email:</strong>{" "}
+                            {parsed.email}
+                        </p>
 
-            <p>
-              <strong>Email:</strong> {parsed.email}
-            </p>
+                        <p>
+                            <strong>Phone:</strong>{" "}
+                            {parsed.phone}
+                        </p>
+                    </div>
 
-            <p>
-              <strong>Phone:</strong> {parsed.phone}
-            </p>
-          </div>
+                    <h3>Skills</h3>
 
-          <h3>Skills</h3>
-
-          <div className="skill-container">
-            {parsed.skills.map((skill, index) => (
-              <span className="skill-tag" key={index}>
-                {skill}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Job Description */}
-      <section className="card">
-        <h2>💼 Job Description</h2>
-
-        <textarea
-          rows="10"
-          placeholder="Paste the job description here..."
-          value={jobDescription}
-          onChange={(e) => setJobDescription(e.target.value)}
-        />
-
-        <button onClick={analyzeJD}>
-          Analyze Job Description
-        </button>
-      </section>
-
-      {/* Required Skills */}
-      {jdSkills.length > 0 && (
-        <section className="card">
-          <h2>🎯 Required Skills</h2>
-
-          <div className="skill-container">
-            {jdSkills.map((skill, index) => (
-              <span className="skill-tag required" key={index}>
-                {skill}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ATS Results */}
-      {ats && (
-        <section className="results">
-
-          <h2 className="results-title">
-            ATS Analysis Results
-          </h2>
-
-          {/* Score */}
-          <div className="score-card">
-
-            <div className="score-circle">
-              <span>{ats.score}%</span>
-            </div>
-
-            <div>
-              <h3>ATS Match Score</h3>
-              <p className="rating">
-                {ats.rating}
-              </p>
-            </div>
-
-          </div>
-
-          {/* Statistics */}
-          <div className="stats">
-
-            <div className="stat-card">
-              <h3>{ats.matched.length}</h3>
-              <p>Matched Skills</p>
-            </div>
-
-            <div className="stat-card">
-              <h3>{ats.missing.length}</h3>
-              <p>Missing Skills</p>
-            </div>
-
-            <div className="stat-card">
-              <h3>{jdSkills.length}</h3>
-              <p>Required Skills</p>
-            </div>
-
-          </div>
-
-          {/* Matched and Missing */}
-          <div className="skill-sections">
-
-            <div className="result-card matched-card">
-              <h3>✓ Matched Skills</h3>
-
-              {ats.matched.length > 0 ? (
-                <ul>
-                  {ats.matched.map((skill, index) => (
-                    <li key={index}>
-                      ✓ {skill}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No matching skills found.</p>
-              )}
-            </div>
-
-            <div className="result-card missing-card">
-              <h3>✗ Missing Skills</h3>
-
-              {ats.missing.length > 0 ? (
-                <ul>
-                  {ats.missing.map((skill, index) => (
-                    <li key={index}>
-                      ✗ {skill}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No missing skills!</p>
-              )}
-            </div>
-
-          </div>
-
-          {/* Suggestions */}
-          <div className="result-card suggestions-card">
-
-            <h3>💡 Resume Improvement Suggestions</h3>
-
-            {ats.suggestions.length > 0 ? (
-              <ul>
-                {ats.suggestions.map((suggestion, index) => (
-                  <li key={index}>
-                    → {suggestion}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>
-                Great! No additional suggestions at this time.
-              </p>
+                    <div className="skill-container">
+                        {parsed.skills.map((skill, index) => (
+                            <span
+                                className="skill-tag"
+                                key={index}
+                            >
+                                {skill}
+                            </span>
+                        ))}
+                    </div>
+                </section>
             )}
 
-          </div>
+            {/* Job Description */}
+            <section className="card">
+                <h2>💼 Job Description</h2>
 
-        </section>
-      )}
+                <textarea
+                    rows="10"
+                    placeholder="Paste the job description here..."
+                    value={jobDescription}
+                    onChange={(e) =>
+                        setJobDescription(e.target.value)
+                    }
+                />
 
-      {/* Extracted Text */}
-      {text && (
-        <section className="card">
+                <button onClick={analyzeJD} disabled={analyzing}>
+                    {analyzing ? "Analyzing..." : "Analyze Job Description"}
+                </button>
 
-          <details>
-            <summary>
-              📃 View Extracted Resume Text
-            </summary>
+                {analysisError && (
+                    <p className="error-message">
+                        {analysisError}
+                    </p>
+                )}
+            </section>
 
-            <pre className="extracted-text">
-              {text}
-            </pre>
+            {/* Required Skills */}
+            {jdSkills.length > 0 && (
+                <section className="card">
+                    <h2>🎯 Required Skills</h2>
 
-          </details>
+                    <div className="skill-container">
+                        {jdSkills.map((skill, index) => (
+                            <span
+                                className="skill-tag required"
+                                key={index}
+                            >
+                                {skill}
+                            </span>
+                        ))}
+                    </div>
+                </section>
+            )}
 
-        </section>
-      )}
+            {/* ATS Results */}
+            {ats && (
+                <section className="results">
 
-      <footer>
-        <p>Smart Resume Analyzer • React + FastAPI</p>
-      </footer>
+                    <h2 className="results-title">
+                        ATS Analysis Results
+                    </h2>
 
-    </div>
-  );
+                    {/* Score */}
+                    <div className="score-card">
+
+                        <div className="score-circle">
+                            <span>{ats.score}%</span>
+                        </div>
+
+                        <div>
+                            <h3>ATS Match Score</h3>
+
+                            <p className="rating">
+                                {ats.rating}
+                            </p>
+                        </div>
+
+                    </div>
+
+                    {/* Statistics */}
+                    <div className="stats">
+
+                        <div className="stat-card">
+                            <h3>{ats.matched.length}</h3>
+                            <p>Matched Skills</p>
+                        </div>
+
+                        <div className="stat-card">
+                            <h3>{ats.missing.length}</h3>
+                            <p>Missing Skills</p>
+                        </div>
+
+                        <div className="stat-card">
+                            <h3>{jdSkills.length}</h3>
+                            <p>Required Skills</p>
+                        </div>
+
+                    </div>
+
+                    {/* Matched and Missing */}
+                    <div className="skill-sections">
+
+                        <div className="result-card matched-card">
+                            <h3>✓ Matched Skills</h3>
+
+                            {ats.matched.length > 0 ? (
+                                <ul>
+                                    {ats.matched.map(
+                                        (skill, index) => (
+                                            <li key={index}>
+                                                ✓ {skill}
+                                            </li>
+                                        )
+                                    )}
+                                </ul>
+                            ) : (
+                                <p>
+                                    No matching skills found.
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="result-card missing-card">
+                            <h3>✗ Missing Skills</h3>
+
+                            {ats.missing.length > 0 ? (
+                                <ul>
+                                    {ats.missing.map(
+                                        (skill, index) => (
+                                            <li key={index}>
+                                                ✗ {skill}
+                                            </li>
+                                        )
+                                    )}
+                                </ul>
+                            ) : (
+                                <p>
+                                    No missing skills!
+                                </p>
+                            )}
+                        </div>
+
+                    </div>
+
+                    {/* Suggestions */}
+                    <div className="result-card suggestions-card">
+
+                        <h3>
+                            💡 Resume Improvement Suggestions
+                        </h3>
+
+                        {ats.suggestions.length > 0 ? (
+                            <ul>
+                                {ats.suggestions.map(
+                                    (suggestion, index) => (
+                                        <li key={index}>
+                                            → {suggestion}
+                                        </li>
+                                    )
+                                )}
+                            </ul>
+                        ) : (
+                            <p>
+                                Great! No additional
+                                suggestions at this time.
+                            </p>
+                        )}
+
+                    </div>
+
+                </section>
+            )}
+
+            {/* Extracted Text */}
+            {text && (
+                <section className="card">
+
+                    <details>
+                        <summary>
+                            📃 View Extracted Resume Text
+                        </summary>
+
+                        <pre className="extracted-text">
+                            {text}
+                        </pre>
+
+                    </details>
+
+                </section>
+            )}
+
+            <footer>
+                <p>
+                    Smart Resume Analyzer • React + FastAPI
+                </p>
+            </footer>
+
+        </div>
+    );
 }
 
 export default App;

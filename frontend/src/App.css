@@ -269,3 +269,8 @@ footer {
     font-size: 28px;
   }
 }
+.error-message {
+    color: #dc2626;
+    margin-top: 10px;
+    font-weight: 600;
+}
