@@ -21,9 +21,22 @@ function App() {
 
     const uploadResume = async () => {
         if (!file) {
-            alert("Please select a PDF first!");
+            setUploadError("Please select a resume file first.");
             return;
         }
+
+        const fileName = file.name.toLowerCase();
+
+        if (
+            file.type !== "application/pdf" &&
+            !fileName.endsWith(".pdf")
+        ) {
+            setUploadError(
+                "Only PDF files are supported. Please upload a PDF resume."
+            );
+            return;
+        }
+
         setUploading(true);
         setUploadError("");
 
@@ -37,19 +50,20 @@ function App() {
             setUploadError(err.message || "Resume upload failed!");
         } finally {
             setUploading(false);
-        } 
+        }
     };
 
     const analyzeJD = async () => {
         if (!file) {
-            alert("Please upload/select a resume first!");
+            setAnalysisError("Please upload/select a resume first.");
             return;
         }
 
         if (!jobDescription.trim()) {
-            alert("Please enter a job description!");
+            setAnalysisError("Please enter a job description!");
             return;
         }
+
         setAnalyzing(true);
         setAnalysisError("");
 
@@ -74,7 +88,6 @@ function App() {
     return (
         <div className="app">
 
-            {/* Header */}
             <header className="header">
                 <h1>Smart Resume Analyzer</h1>
                 <p>
@@ -82,16 +95,39 @@ function App() {
                 </p>
             </header>
 
-            {/* Resume Upload */}
             <section className="card">
                 <h2>📄 Upload Resume</h2>
 
                 <input
                     type="file"
-                    accept=".pdf"
-                    onChange={(e) =>
-                        setFile(e.target.files[0])
-                    }
+                    accept=".pdf,application/pdf"
+                    onChange={(e) => {
+                        const selectedFile = e.target.files[0];
+
+                        setUploadError("");
+                        setParsed(null);
+                        setText("");
+
+                        if (!selectedFile) {
+                            setFile(null);
+                            return;
+                        }
+
+                        const fileName = selectedFile.name.toLowerCase();
+
+                        if (
+                            selectedFile.type !== "application/pdf" &&
+                            !fileName.endsWith(".pdf")
+                        ) {
+                            setFile(selectedFile);
+                            setUploadError(
+                                "Only PDF files are supported. Please upload a PDF resume."
+                            );
+                            return;
+                        }
+
+                        setFile(selectedFile);
+                    }}
                 />
 
                 {file && (
@@ -100,7 +136,10 @@ function App() {
                     </p>
                 )}
 
-                <button onClick={uploadResume} disabled={uploading}>
+                <button
+                    onClick={uploadResume}
+                    disabled={uploading}
+                >
                     {uploading ? "Uploading..." : "Upload Resume"}
                 </button>
 
@@ -111,7 +150,6 @@ function App() {
                 )}
             </section>
 
-            {/* Parsed Resume */}
             {parsed && (
                 <section className="card">
                     <h2>👤 Parsed Resume</h2>
@@ -148,7 +186,6 @@ function App() {
                 </section>
             )}
 
-            {/* Job Description */}
             <section className="card">
                 <h2>💼 Job Description</h2>
 
@@ -161,8 +198,13 @@ function App() {
                     }
                 />
 
-                <button onClick={analyzeJD} disabled={analyzing}>
-                    {analyzing ? "Analyzing..." : "Analyze Job Description"}
+                <button
+                    onClick={analyzeJD}
+                    disabled={analyzing}
+                >
+                    {analyzing
+                        ? "Analyzing..."
+                        : "Analyze Job Description"}
                 </button>
 
                 {analysisError && (
@@ -172,7 +214,6 @@ function App() {
                 )}
             </section>
 
-            {/* Required Skills */}
             {jdSkills.length > 0 && (
                 <section className="card">
                     <h2>🎯 Required Skills</h2>
@@ -190,7 +231,6 @@ function App() {
                 </section>
             )}
 
-            {/* ATS Results */}
             {ats && (
                 <section className="results">
 
@@ -198,7 +238,6 @@ function App() {
                         ATS Analysis Results
                     </h2>
 
-                    {/* Score */}
                     <div className="score-card">
 
                         <div className="score-circle">
@@ -215,7 +254,6 @@ function App() {
 
                     </div>
 
-                    {/* Statistics */}
                     <div className="stats">
 
                         <div className="stat-card">
@@ -235,7 +273,6 @@ function App() {
 
                     </div>
 
-                    {/* Matched and Missing */}
                     <div className="skill-sections">
 
                         <div className="result-card matched-card">
@@ -280,7 +317,6 @@ function App() {
 
                     </div>
 
-                    {/* Suggestions */}
                     <div className="result-card suggestions-card">
 
                         <h3>
@@ -309,7 +345,6 @@ function App() {
                 </section>
             )}
 
-            {/* Extracted Text */}
             {text && (
                 <section className="card">
 

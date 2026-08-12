@@ -1,4 +1,7 @@
 import re
+from skills import SKILLS
+
+
 def extract_email(text):
     pattern = r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"
     match = re.search(pattern, text)
@@ -7,17 +10,19 @@ def extract_email(text):
         return match.group()
 
     return ""
+
+
 def extract_phone(text):
     pattern = r"\b\d{10}\b"
-
     match = re.search(pattern, text)
 
     if match:
         return match.group()
 
     return ""
-def extract_name(text):
 
+
+def extract_name(text):
     lines = text.split("\n")
 
     for line in lines:
@@ -27,21 +32,22 @@ def extract_name(text):
             return line
 
     return ""
-from skills import SKILLS
+
+
 def extract_skills(text):
-
     found = []
-
     lower_text = text.lower()
 
     for skill in SKILLS:
+        pattern = r"(?<!\w)" + re.escape(skill.lower()) + r"(?!\w)"
 
-        if skill.lower() in lower_text:
+        if re.search(pattern, lower_text):
             found.append(skill)
 
     return found
-def parse_resume(text):
 
+
+def parse_resume(text):
     return {
         "name": extract_name(text),
         "email": extract_email(text),

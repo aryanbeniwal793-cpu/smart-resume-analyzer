@@ -26,6 +26,11 @@ def home():
 
 @app.post("/upload")
 async def upload_resume(file: UploadFile = File(...)):
+    if file.content_type != "application/pdf":
+        return {
+            "error": "Only PDF files are supported."
+        }
+
     pdf = fitz.open(
         stream=await file.read(),
         filetype="pdf"
@@ -50,7 +55,16 @@ async def analyze_jd(
     file: UploadFile = File(...),
     job_description: str = Form(...)
 ):
-    # Read Resume
+    if file.content_type != "application/pdf":
+        return {
+            "error": "Only PDF files are supported."
+        }
+
+    if not job_description.strip():
+        return {
+            "error": "Job description cannot be empty."
+        }
+
     pdf = fitz.open(
         stream=await file.read(),
         filetype="pdf"
@@ -63,27 +77,47 @@ async def analyze_jd(
 
     resume_data = parse_resume(resume_text)
 
-    # Skills Database
     skills_db = [
         "Python",
         "Java",
         "C",
         "C++",
+        "C#",
         "SQL",
         "React",
+        "Node.js",
         "Node",
         "JavaScript",
+        "TypeScript",
         "Machine Learning",
+        "Deep Learning",
         "HTML",
         "CSS",
         "Git",
+        "GitHub",
         "FastAPI",
+        "Django",
+        "Flask",
         "Docker",
+        "Kubernetes",
         "AWS",
-        "MongoDB"
+        "Azure",
+        "GCP",
+        "MongoDB",
+        "MySQL",
+        "PostgreSQL",
+        "Redis",
+        "Kotlin",
+        "Android",
+        "Swift",
+        "iOS",
+        "Flutter",
+        "React Native",
+        "TensorFlow",
+        "PyTorch",
+        "Linux"
     ]
 
-    # Extract JD Skills
     print("JD RECEIVED:", repr(job_description))
 
     jd_skills = []
@@ -96,13 +130,11 @@ async def analyze_jd(
         if re.search(pattern, jd_text):
             jd_skills.append(skill)
 
-    # Calculate ATS Score
     ats = calculate_score(
         resume_data["skills"],
         jd_skills
     )
 
-    # Debug Prints
     print("Resume Skills:", resume_data["skills"])
     print("JD Skills:", jd_skills)
     print("ATS:", ats)
