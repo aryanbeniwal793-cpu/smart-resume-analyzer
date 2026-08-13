@@ -42,6 +42,19 @@ https://smart-resume-analyzer-olive.vercel.app
 - Vercel — Frontend
 - Render — Backend
 - GitHub — Source Code Management
+## Screenshots
+
+### Homepage
+
+![Homepage](docs/homepage.png)
+
+### Resume Analysis
+
+![Resume Analysis](docs/resume-analysis.png)
+
+### ATS Analysis Results
+
+![ATS Analysis Results](docs/ats-results.png)
 
 ## Project Architecture
 ![Smart Resume Analyzer Architecture](docs/architecture.png)
@@ -71,16 +84,3 @@ https://smart-resume-analyzer-olive.vercel.app
                                            v
                                   Analysis Results
 
-## Screenshots
-
-### Homepage
-
-![Homepage](docs/homepage.png)
-
-### Resume Analysis
-
-![Resume Analysis](docs/resume-analysis.png)
-
-### ATS Analysis Results
-
-![ATS Analysis Results](docs/ats-results.png)
